@@ -1,0 +1,35 @@
+name: Lottery Remind
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 每周二、四、日的 21:45 触发
+    - cron: '45 13 * * 2,4,0'
+
+jobs:
+  lottery_check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean install -DskipTests --file pom.xml
+
+
+      - name: Run LotteryRemind
+        env:
+          EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          SSQ_API_URL: ${{ secrets.SSQ_API_URL }}
+        run: java -jar target/lottery-reminder-*.jar
